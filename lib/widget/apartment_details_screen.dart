@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:livora/models/apartment.dart';
 import 'package:livora/controller/apartment_details_controller.dart';
+import 'package:livora/controller/booking_controller.dart';
 
 class ApartmentDetailsScreen extends StatelessWidget {
   final Apartment apartment;
@@ -17,6 +18,11 @@ class ApartmentDetailsScreen extends StatelessWidget {
       tag: apartment.id.toString(),
     );
 
+    final bookingController = Get.put(
+      BookingController(apartment.id ?? 0),
+      tag: 'booking_${apartment.id}',
+    );
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -29,8 +35,7 @@ class ApartmentDetailsScreen extends StatelessWidget {
       ),
       body: Obx(() {
         /// تحميل
-        if (controller.isLoading.value &&
-            controller.apartment.value == null) {
+        if (controller.isLoading.value && controller.apartment.value == null) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -92,8 +97,7 @@ class ApartmentDetailsScreen extends StatelessWidget {
                               color: theme.colorScheme.primary, size: 28),
                           Text(
                             apt.price,
-                            style:
-                                theme.textTheme.headlineMedium?.copyWith(
+                            style: theme.textTheme.headlineMedium?.copyWith(
                               color: theme.colorScheme.primary,
                               fontWeight: FontWeight.bold,
                             ),
@@ -142,19 +146,8 @@ class ApartmentDetailsScreen extends StatelessWidget {
 
                       const SizedBox(height: 24),
 
-                      /// زر الحجز
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.calendar_today),
-                          label: Text(
-                            'احجز الان'.tr,
-                            style: theme.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
+                      /// 🔥 Booking Section
+                      Obx(() => _buildBookingSection(bookingController, theme)),
                     ],
                   ),
                 ),
@@ -166,7 +159,99 @@ class ApartmentDetailsScreen extends StatelessWidget {
     );
   }
 
-  // ===================== Widgets =====================
+  // ===================== Booking Section =====================
+  
+  Widget _buildBookingSection(BookingController controller, ThemeData theme) {
+    if (controller.hasBooking.value && controller.currentBooking.value != null) {
+      // User has existing booking
+      final booking = controller.currentBooking.value!;
+      return Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Text(
+                      'لديك حجز نشط'.tr,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text('من: ${booking['start_date']}'),
+                Text('إلى: ${booking['end_date']}'),
+                if (booking['notes'] != null && booking['notes'].isNotEmpty)
+                  Text('ملاحظات: ${booking['notes']}'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: controller.showEditBookingDialog,
+                  icon: const Icon(Icons.edit),
+                  label: Text('تعديل الحجز'.tr),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Obx(() => ElevatedButton.icon(
+                  onPressed: controller.isCancelling.value
+                      ? null
+                      : () => controller.cancelBooking(booking['id']),
+                  icon: controller.isCancelling.value
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.close),
+                  label: Text('إلغاء الحجز'.tr),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                )),
+              ),
+            ],
+          ),
+        ],
+      );
+    } else {
+      // No booking - show book button
+      return SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton.icon(
+          onPressed: controller.showBookingDialog,
+          icon: const Icon(Icons.calendar_today),
+          label: Text(
+            'احجز الآن'.tr,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  // ===================== Other Widgets =====================
 
   Widget _buildMainImage(Apartment apt) {
     return Container(
@@ -278,10 +363,8 @@ class ApartmentDetailsScreen extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor:
-                theme.colorScheme.primary.withOpacity(0.1),
-            child: Icon(Icons.person,
-                color: theme.colorScheme.primary),
+            backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+            child: Icon(Icons.person, color: theme.colorScheme.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -299,8 +382,7 @@ class ApartmentDetailsScreen extends StatelessWidget {
           ),
           IconButton(
             onPressed: () {},
-            icon: Icon(Icons.phone,
-                color: theme.colorScheme.primary),
+            icon: Icon(Icons.phone, color: theme.colorScheme.primary),
           ),
         ],
       ),

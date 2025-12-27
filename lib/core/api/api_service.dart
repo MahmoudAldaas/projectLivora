@@ -357,108 +357,225 @@ class ApiService {
 
   //  ADD APARTMENT 
   static Future<Map<String, dynamic>> addApartment({
-    required String title,
-    required String governorate,
-    required String city,
-    required int numberRooms,
-    String? description,
-    required double price,
-    required String mainImagePath,
-    List<String>? imagesPath,
-    String? token,
-  }) async {
-    try {
-      print('إضافة شقة جديدة');
+  required String title,
+  required String governorate,
+  required String city,
+  required int numberRooms,
+  String? description,
+  required double price,
+  String? mainImagePath, // ✅ اختيارية
+  List<String>? imagesPath, // ✅ اختيارية
+  String? token,
+}) async {
+  try {
+    print('📤 إضافة شقة جديدة');
 
-      final url = Uri.parse("$baseUrl/apartments");
-      var request = http.MultipartRequest("POST", url);
+    final url = Uri.parse("$baseUrl/apartments");
+    
+    // ✅ نشوف إذا في صور ولا لأ
+    bool hasImages = (mainImagePath != null && mainImagePath.isNotEmpty) ||
+                     (imagesPath != null && imagesPath.isNotEmpty);
 
-      // Headers With Token
-      request.headers['Accept'] = 'application/json';
-      String? useToken = token ?? _authToken;
-      if (useToken != null) {
-        request.headers['Authorization'] = 'Bearer $useToken';
-      }
+    if (hasImages) {
+      // 📸 إذا في صور → نستخدم MultipartRequest
+      print('📸 إرسال مع صور');
+      return await _addApartmentWithImages(
+        title: title,
+        governorate: governorate,
+        city: city,
+        numberRooms: numberRooms,
+        description: description,
+        price: price,
+        mainImagePath: mainImagePath,
+        imagesPath: imagesPath,
+        token: token,
+      );
+    } else {
+      // 📝 إذا ما في صور → نستخدم JSON عادي
+      print('📝 إرسال بدون صور');
+      return await _addApartmentWithoutImages(
+        title: title,
+        governorate: governorate,
+        city: city,
+        numberRooms: numberRooms,
+        description: description,
+        price: price,
+        token: token,
+      );
+    }
+  } catch (e) {
+    print('❌ خطأ: $e');
+    return {'error': true, 'message': 'Error adding apartment: $e'};
+  }
+}
 
-      // Fields
-      request.fields["title"] = title;
-      request.fields["governorate"] = governorate;
-      request.fields["city"] = city;
-      request.fields["number_rooms"] = numberRooms.toString();
-      request.fields["price"] = price.toString();
+// 📸 إضافة شقة مع صور
+static Future<Map<String, dynamic>> _addApartmentWithImages({
+  required String title,
+  required String governorate,
+  required String city,
+  required int numberRooms,
+  String? description,
+  required double price,
+  String? mainImagePath,
+  List<String>? imagesPath,
+  String? token,
+}) async {
+  try {
+    final url = Uri.parse("$baseUrl/apartments");
+    var request = http.MultipartRequest("POST", url);
 
-      if (description != null && description.isNotEmpty) {
-        request.fields["description"] = description;
-      }
+    // Headers
+    request.headers['Accept'] = 'application/json';
+    String? useToken = token ?? _authToken;
+    if (useToken != null) {
+      request.headers['Authorization'] = 'Bearer $useToken';
+      print('🔑 Token موجود');
+    }
 
-      // Main Image 
+    // Fields
+    request.fields["title"] = title;
+    request.fields["governorate"] = governorate;
+    request.fields["city"] = city;
+    request.fields["number_rooms"] = numberRooms.toString();
+    request.fields["price"] = price.toString();
+
+    if (description != null && description.isNotEmpty) {
+      request.fields["description"] = description;
+    }
+
+    // Main Image
+    if (mainImagePath != null && mainImagePath.isNotEmpty) {
       final mainFile = File(mainImagePath);
       if (await mainFile.exists()) {
         String extension = mainImagePath.split('.').last.toLowerCase();
-        MediaType mediaType = MediaType(
-          'image',
-          extension == 'png' ? 'png' : 'jpeg',
-        );
-
         request.files.add(
           await http.MultipartFile.fromPath(
             "main_image",
             mainImagePath,
-            contentType: mediaType,
+            contentType: MediaType('image', extension == 'png' ? 'png' : 'jpeg'),
           ),
         );
-      } else {
-        throw Exception('Main image not found');
+        print('✅ تم إضافة الصورة الرئيسية');
       }
+    }
 
-      // Additional Images 
-      if (imagesPath != null && imagesPath.isNotEmpty) {
-        for (int i = 0; i < imagesPath.length; i++) {
-          final imageFile = File(imagesPath[i]);
-          if (await imageFile.exists()) {
-            String extension = imagesPath[i].split('.').last.toLowerCase();
-            MediaType mediaType = MediaType(
-              'image',
-              extension == 'png' ? 'png' : 'jpeg',
-            );
-
-            request.files.add(
-              await http.MultipartFile.fromPath(
-                "images[]", 
-                imagesPath[i],
-                contentType: mediaType,
-              ),
-            );
-          }
+    // Additional Images
+    if (imagesPath != null && imagesPath.isNotEmpty) {
+      for (var imagePath in imagesPath) {
+        final imageFile = File(imagePath);
+        if (await imageFile.exists()) {
+          String extension = imagePath.split('.').last.toLowerCase();
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              "images[]",
+              imagePath,
+              contentType: MediaType('image', extension == 'png' ? 'png' : 'jpeg'),
+            ),
+          );
         }
       }
-
-      final response = await request.send().timeout(Duration(seconds: 30));
-      final responseBody = await response.stream.bytesToString();
-
-      print('استجابة: ${response.statusCode}');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final jsonResponse = jsonDecode(responseBody);
-        return {
-          'error': false,
-          'status_code': response.statusCode,
-          'message': 'Apartment added successfully',
-          'data': jsonResponse,
-        };
-      } else {
-        final errorJson = jsonDecode(responseBody);
-        return {
-          'error': true,
-          'status_code': response.statusCode,
-          'message': errorJson['message'] ?? 'Failed to add apartment',
-        };
-      }
-    } catch (e) {
-      print('Error: $e');
-      return {'error': true, 'message': 'Error adding apartment: $e'};
+      print('✅ تم إضافة ${imagesPath.length} صور إضافية');
     }
+
+    final response = await request.send().timeout(Duration(seconds: 30));
+    final responseBody = await response.stream.bytesToString();
+
+    print('📥 استجابة: ${response.statusCode}');
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(responseBody);
+      print('✅ تمت إضافة الشقة بنجاح');
+      return {
+        'error': false,
+        'status_code': response.statusCode,
+        'message': 'Apartment added successfully',
+        'data': jsonResponse,
+      };
+    } else {
+      final errorJson = jsonDecode(responseBody);
+      print('❌ خطأ: ${errorJson['message']}');
+      return {
+        'error': true,
+        'status_code': response.statusCode,
+        'message': errorJson['message'] ?? 'Failed to add apartment',
+      };
+    }
+  } catch (e) {
+    print('❌ خطأ: $e');
+    return {'error': true, 'message': 'Error: $e'};
   }
+}
+
+// 📝 إضافة شقة بدون صور
+static Future<Map<String, dynamic>> _addApartmentWithoutImages({
+  required String title,
+  required String governorate,
+  required String city,
+  required int numberRooms,
+  String? description,
+  required double price,
+  String? token,
+}) async {
+  try {
+    final url = Uri.parse("$baseUrl/apartments");
+
+    Map<String, String> headers = {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+    };
+
+    String? useToken = token ?? _authToken;
+    if (useToken != null) {
+      headers['Authorization'] = 'Bearer $useToken';
+      print('🔑 Token موجود');
+    }
+
+    Map<String, dynamic> body = {
+      "title": title,
+      "governorate": governorate,
+      "city": city,
+      "number_rooms": numberRooms,
+      "price": price,
+    };
+
+    if (description != null && description.isNotEmpty) {
+      body["description"] = description;
+    }
+
+    print('📋 البيانات: $body');
+
+    final response = await http.post(
+      url,
+      headers: headers,
+      body: jsonEncode(body),
+    ).timeout(Duration(seconds: 30));
+
+    print('📥 استجابة: ${response.statusCode}');
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      print('✅ تمت إضافة الشقة بنجاح');
+      return {
+        'error': false,
+        'status_code': response.statusCode,
+        'message': 'Apartment added successfully',
+        'data': jsonResponse,
+      };
+    } else {
+      final errorJson = jsonDecode(response.body);
+      print('❌ خطأ: ${errorJson['message']}');
+      return {
+        'error': true,
+        'status_code': response.statusCode,
+        'message': errorJson['message'] ?? 'Failed to add apartment',
+      };
+    }
+  } catch (e) {
+    print('❌ خطأ: $e');
+    return {'error': true, 'message': 'Error: $e'};
+  }
+}
 
   //  UPDATE APARTMENT 
   static Future<Map<String, dynamic>> updateApartment({

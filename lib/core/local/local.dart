@@ -9,13 +9,13 @@ class MyLocal implements Translations{
           // Register Screen
           'Create Account': 'إنشاء حساب',
           'I am a:': 'أنا:',
-          'First Name ': 'الاسم الأول ',
-          'Last Name ': 'اسم العائلة ',
-          'Phone ': 'رقم الهاتف ',
-          'Password ': 'كلمة المرور ',
-          'Confirm Password ': 'تأكيد كلمة المرور ',
-          'Birthdate ': 'تاريخ الميلاد ',
-          'Profile Image ': 'صورة الملف الشخصي ',
+          'First Name': 'الاسم الأول ',
+          'Last Name': 'اسم العائلة ',
+          'Phone': 'رقم الهاتف ',
+          'Password': 'كلمة المرور ',
+          'Confirm Password': 'تأكيد كلمة المرور ',
+          'Birthdate': 'تاريخ الميلاد ',
+          'Profile Image': 'الصورة الشخصية',
           'ID Image': 'صورة الهوية',
           'Register': 'تسجيل',
           'Already have an account?': 'لديك حساب بالفعل؟ ',
@@ -25,6 +25,7 @@ class MyLocal implements Translations{
           'Renter':'مستأجر',
           'Owner':'مالك',
           'owner':'مالك',
+          'Back':'رجوع',
 
           // Log In Screen
           'Log In': 'تسجيل الدخول',
@@ -34,7 +35,7 @@ class MyLocal implements Translations{
           "Don't have an account?": 'ليس لديك حساب؟',
 
           // Home Screen
-          'Home ': 'الرئيسية ',
+          'Home': 'الرئيسية ',
           'حدث خطأ في التحميل': 'حدث خطأ في التحميل',
           'إعادة المحاولة': 'إعادة المحاولة',
           'لا توجد شقق متاحة': 'لا توجد شقق متاحة',
@@ -100,7 +101,7 @@ class MyLocal implements Translations{
           'I am a:': 'I am a:',
           'First Name ': 'First Name ',
           'Last Name ': 'Last Name ',
-          'Phone ': 'Phone ',
+          'Phone': 'Phone ',
           'Password ': 'Password ',
           'Confirm Password ': 'Confirm Password ',
           'Birthdate ': 'Birthdate ',
@@ -112,6 +113,7 @@ class MyLocal implements Translations{
           'Tap to select': 'Tap to select',
           'Renter':'renter',
           'Owner':'owner',
+          'Back':'back',
 
           // Log In Screen
           'Log In': 'Log In',
@@ -121,7 +123,7 @@ class MyLocal implements Translations{
           "Don't have an account?": "Don't have an account?",
           
           // Home Screen
-          'Home ': 'Home ',
+          'Home': 'Home ',
           'حدث خطأ في التحميل': 'An error occurred while loading',
           'إعادة المحاولة': 'Retry',
           'لا توجد شقق متاحة': 'No apartments available',

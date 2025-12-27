@@ -113,7 +113,7 @@ class RegisterScreen extends StatelessWidget {
 
                 // ✅ Profile Image (Optional)
                 Text(
-                  "Profile Image (Optional)".tr,
+                  "Profile Image".tr,
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurface.withOpacity(0.7),
                   ),
@@ -130,7 +130,7 @@ class RegisterScreen extends StatelessWidget {
 
                 // ✅ ID Image (Optional)
                 Text(
-                  "ID Image (Optional)".tr,
+                  "ID Image".tr,
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurface.withOpacity(0.7),
                   ),
@@ -327,7 +327,7 @@ class RegisterScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    "Tap to select (Optional)".tr,
+                    "Tap to select".tr,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),

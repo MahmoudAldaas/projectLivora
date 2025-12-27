@@ -8,6 +8,7 @@ import 'package:livora/widget/filter_screen.dart';
 import 'package:livora/widget/home_screen.dart';
 import 'package:livora/widget/notification_screen.dart';
 import 'package:livora/widget/profile_screen.dart';
+import 'package:livora/widget/add_apartment_screen.dart'; 
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -61,10 +62,11 @@ class MainScreen extends StatelessWidget {
         body: screens[navController.currentIndex.value],
         floatingActionButton: Obx(() {
           if (navController.currentIndex.value == 0 &&
-              homeController.isOwner.value) {
+              homeController.isowner.value) {
             return FloatingActionButton(
               onPressed: () {
-                _showApartmentOptionsMenu(context, theme);
+                // 👈 بدلاً من BottomSheet، نفتح صفحة AddApartmentScreen
+                Get.to(() => AddApartmentScreen());
               },
               backgroundColor: theme.colorScheme.primary,
               child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
@@ -79,18 +81,18 @@ class MainScreen extends StatelessWidget {
           backgroundColor: theme.bottomNavigationBarTheme.backgroundColor,
           selectedItemColor: theme.bottomNavigationBarTheme.selectedItemColor,
           unselectedItemColor: theme.bottomNavigationBarTheme.unselectedItemColor,
-          showSelectedLabels: false,  // إخفاء النص للأيقونة المحددة
-          showUnselectedLabels: false, // إخفاء النص للأيقونات غير المحددة
-          items: [
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
-              label: '', // يجب وضع label فارغ
+              label: '',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.favorite),
               label: '',
             ),
-             BottomNavigationBarItem(
+            BottomNavigationBarItem(
               icon: Icon(Icons.notifications_active_sharp),
               label: '',
             ),
@@ -98,33 +100,6 @@ class MainScreen extends StatelessWidget {
               icon: Icon(Icons.person),
               label: '',
             ),
-           
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showApartmentOptionsMenu(BuildContext context, ThemeData theme) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(height: 10),
-            Text(
-              'Apartment Options'.tr,
-              style: theme.textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
           ],
         ),
       ),
