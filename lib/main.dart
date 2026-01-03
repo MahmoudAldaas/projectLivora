@@ -15,14 +15,11 @@ void main() async {
   
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   
-  // ✅ 1. تحميل اللغة
   final String langCode = prefs.getString('lang') ?? 'ar';
   final Locale initialLocale = Locale(langCode);
   
-  // ✅ 2. تحميل الثيم من SharedPreferences قبل بدء التطبيق
   final bool isDarkMode = prefs.getBool('isDarkMode') ?? false;
   
-  // ✅ 3. تسجيل ThemeController مع القيمة المحملة
   Get.put(ThemesController(initialDarkMode: isDarkMode));
   
   runApp(MyApp(initialLocale: initialLocale));
@@ -45,7 +42,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ الحصول على الـ Controller
     final ThemesController themesController = Get.find();
     
     return Obx(() => GetMaterialApp(
@@ -54,7 +50,6 @@ class MyApp extends StatelessWidget {
       translations: MyLocal(),
       theme: Themes.lightTheme,
       darkTheme: Themes.darkTheme,
-      // ✅ ربط ThemeMode مع Controller
       themeMode: themesController.isDarkMode.value ? ThemeMode.dark : ThemeMode.light,
       home: FutureBuilder<bool>(
         future: isLoggedIn(),

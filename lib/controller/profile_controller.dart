@@ -3,43 +3,43 @@ import 'package:flutter/material.dart';
 import 'package:livora/controller/local_conroller.dart';
 import 'package:livora/widget/log_in_screen.dart';
 import 'package:livora/widget/my_booking_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // 👈 أضف هذا
-
+import 'package:livora/widget/owner_booking_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart'; 
+import '../controller/navgation_controller.dart';
+import '../controller/home_controller.dart';
 class ProfileController extends GetxController {
-  // Dark Mode
   var isDarkMode = false.obs;
+  var userRole = ''.obs; 
   
-  final String _themeKey = 'isDarkMode'; // 👈 مفتاح الحفظ
+  final String _themeKey = 'isDarkMode'; 
   
-  // الحصول على LocalController
   final MyLocalController localController = Get.find<MyLocalController>();
   
   @override
   void onInit() {
     super.onInit();
-    _loadThemeFromPrefs(); // 👈 تحميل الثيم المحفوظ
+    _loadThemeFromPrefs();
+    _loadUserRole(); 
   }
   
-  // 👇 تحميل الثيم من SharedPreferences
   Future<void> _loadThemeFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     isDarkMode.value = prefs.getBool(_themeKey) ?? false;
-    
-    // تطبيق الثيم المحفوظ
     Get.changeThemeMode(isDarkMode.value ? ThemeMode.dark : ThemeMode.light);
   }
+
+  Future<void> _loadUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    userRole.value = prefs.getString('user_role') ?? '';
+  }
   
-  // 👇 تبديل الوضع الليلي وحفظه
   Future<void> toggleDarkMode(bool value) async {
     isDarkMode.value = value;
     Get.changeThemeMode(value ? ThemeMode.dark : ThemeMode.light);
-    
-    // حفظ في SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_themeKey, value);
   }
       
-  // تغيير اللغة (دالة واحدة فقط!)
   void changeLanguage(String language) {
     if (language == 'العربية') {
       localController.changeLang('ar');
@@ -48,12 +48,14 @@ class ProfileController extends GetxController {
     }
   }
 
-  // الانتقال لصفحة الحجوزات
   void goToMyBookings() {
-    Get.to(() => MyBookingScreen());
+    Get.to(() => MyBookingsScreen());
   }
 
-  // تسجيل الخروج
+  void goToOwnerBookings() {
+    Get.to(() =>OwnerBookingScreen());
+  }
+
   void showLogoutDialog() {
     Get.dialog(
       AlertDialog(
@@ -71,7 +73,7 @@ class ProfileController extends GetxController {
             },
             child: Text(
               'تسجيل الخروج'.tr,
-              style: TextStyle(color: Colors.red),
+              style: const TextStyle(color: Colors.red),
             ),
           ),
         ],
@@ -80,13 +82,23 @@ class ProfileController extends GetxController {
   }
 
   void logout() async {
-    // مسح التوكن والإعدادات
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
-    // ملاحظة: ممكن تخلي الثيم واللغة محفوظين حتى بعد الخروج
-    // أو تمسحهم إذا بدك:
-    // await prefs.remove(_themeKey);
-    
+    await prefs.remove('user');
+    await prefs.remove('user_id');
+    await prefs.remove('user_name');
+    await prefs.remove('user_phone');
+    await prefs.remove('user_role');
+  
+    if (Get.isRegistered<NavigationController>()) {
+      final navController = Get.find<NavigationController>();
+      navController.currentIndex.value = 0;
+    }
+  
+    Get.delete<NavigationController>();
+    Get.delete<HomeController>();
+    Get.delete<ProfileController>();
+  
     Get.offAll(() => LogInScreen());
   }
 }

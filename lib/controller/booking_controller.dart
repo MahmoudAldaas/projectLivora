@@ -1,40 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:livora/core/api/api_service.dart';
+import 'package:intl/intl.dart'; 
 
 class BookingController extends GetxController {
   final int apartmentId;
 
   BookingController(this.apartmentId);
 
-  // Booking State
   final isBooking = false.obs;
   final isCancelling = false.obs;
   final isUpdating = false.obs;
+  final isLoading = false.obs;
 
-  // Current Booking (mock)
   final Rx<Map<String, dynamic>?> currentBooking = Rx<Map<String, dynamic>?>(null);
   final hasBooking = false.obs;
 
   @override
   void onInit() {
     super.onInit();
-    checkExistingBooking();
+    fetchCurrentBooking();
   }
 
-  // ================= Mock API =================
-  Future<void> checkExistingBooking() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    bool exists = false; // يمكنك تغييره لتجربة وجود حجز
-    if (exists) {
-      currentBooking.value = {
-        'id': 1,
-        'start_date': DateTime.now().add(const Duration(days: 1)).toString().split(' ')[0],
-        'end_date': DateTime.now().add(const Duration(days: 3)).toString().split(' ')[0],
-        'notes': 'ملاحظات تجريبية',
-      };
-      hasBooking.value = true;
-    } else {
+  
+  Future<void> fetchCurrentBooking() async {
+    try {
+      isLoading.value = true;
+
+      final response = await ApiService.getBookingForApartment(
+        apartmentId: apartmentId,
+      );
+
+      print('Response: $response');
+
+      if (response['error'] == false) {
+        if (response['data'] != null) {
+          currentBooking.value = response['data'];
+          hasBooking.value = true;
+          print(' يوجد حجز نشط: ${currentBooking.value}');
+        } else {
+          currentBooking.value = null;
+          hasBooking.value = false;
+          print('ℹ لا يوجد حجز نشط');
+        }
+      } else {
+        currentBooking.value = null;
+        hasBooking.value = false;
+      }
+    } catch (e) {
+      print(' خطأ في جلب الحجز: $e');
       hasBooking.value = false;
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -49,46 +66,75 @@ class BookingController extends GetxController {
       _showError('تاريخ البداية يجب أن يكون قبل تاريخ النهاية'.tr);
       return;
     }
-    if (startDate.isBefore(DateTime.now())) {
+    if (startDate.isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
       _showError('لا يمكن الحجز في تاريخ سابق'.tr);
       return;
     }
 
-    isBooking.value = true;
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      isBooking.value = true;
 
-    currentBooking.value = {
-      'id': DateTime.now().millisecondsSinceEpoch,
-      'start_date': startDate.toString().split(' ')[0],
-      'end_date': endDate.toString().split(' ')[0],
-      'notes': notes,
-    };
-    hasBooking.value = true;
-    _showSuccess('تم الحجز بنجاح'.tr);
-    Get.back();
-    isBooking.value = false;
+      final response = await ApiService.createBooking(
+        apartmentId: apartmentId,
+        startDate: _formatDate(startDate),
+        endDate: _formatDate(endDate),
+      );
+
+      print('Create Booking Response: $response');
+
+      if (response['error'] == false) {
+        currentBooking.value = response['data'];
+        hasBooking.value = true;
+        _showSuccess('تم الحجز بنجاح! في انتظار موافقة المالك'.tr);
+        Get.back();
+      } else {
+        _showError(response['message'] ?? 'فشل إنشاء الحجز'.tr);
+      }
+    } catch (e) {
+      print('خطأ في إنشاء الحجز: $e');
+      _showError('حدث خطأ أثناء الحجز'.tr);
+    } finally {
+      isBooking.value = false;
+    }
   }
 
   Future<void> updateBooking({
     required int bookingId,
-    DateTime? startDate,
-    DateTime? endDate,
+    required DateTime startDate,
+    required DateTime endDate,
     String? notes,
   }) async {
     if (isUpdating.value) return;
 
-    isUpdating.value = true;
-    await Future.delayed(const Duration(seconds: 1));
+    if (startDate.isAfter(endDate)) {
+      _showError('تاريخ البداية يجب أن يكون قبل تاريخ النهاية'.tr);
+      return;
+    }
 
-    currentBooking.value = {
-      'id': bookingId,
-      'start_date': startDate!.toString().split(' ')[0],
-      'end_date': endDate!.toString().split(' ')[0],
-      'notes': notes,
-    };
-    _showSuccess('تم تحديث الحجز بنجاح'.tr);
-    Get.back();
-    isUpdating.value = false;
+    try {
+      isUpdating.value = true;
+
+      final response = await ApiService.updateBooking(
+        bookingId: bookingId,
+        startDate: _formatDate(startDate),
+        endDate: _formatDate(endDate),
+      );
+
+      print('📥 Update Booking Response: $response');
+
+      if (response['error'] == false) {
+        currentBooking.value = response['data'];
+        _showSuccess('تم تحديث الحجز بنجاح'.tr);
+        Get.back();
+      } else {
+        _showError(response['message'] ?? 'فشل تحديث الحجز'.tr);
+      }
+    } catch (e) {
+      print(' خطأ في تحديث الحجز: $e');
+      _showError('حدث خطأ أثناء التحديث'.tr);
+    } finally {
+      isUpdating.value = false;
+    }
   }
 
   Future<void> cancelBooking(int bookingId) async {
@@ -99,7 +145,10 @@ class BookingController extends GetxController {
         title: Text('تأكيد الإلغاء'.tr),
         content: Text('هل أنت متأكد من إلغاء الحجز؟'.tr),
         actions: [
-          TextButton(onPressed: () => Get.back(result: false), child: Text('لا'.tr)),
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('لا'.tr),
+          ),
           TextButton(
             onPressed: () => Get.back(result: true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -111,16 +160,28 @@ class BookingController extends GetxController {
 
     if (confirmed != true) return;
 
-    isCancelling.value = true;
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      isCancelling.value = true;
 
-    currentBooking.value = null;
-    hasBooking.value = false;
-    _showSuccess('تم إلغاء الحجز'.tr);
-    isCancelling.value = false;
+      final response = await ApiService.cancelBooking(bookingId: bookingId);
+
+      print(' Cancel Booking Response: $response');
+
+      if (response['error'] == false) {
+        currentBooking.value = null;
+        hasBooking.value = false;
+        _showSuccess('تم إلغاء الحجز بنجاح'.tr);
+      } else {
+        _showError(response['message'] ?? 'فشل إلغاء الحجز'.tr);
+      }
+    } catch (e) {
+      print(' خطأ في إلغاء الحجز: $e');
+      _showError('حدث خطأ أثناء الإلغاء'.tr);
+    } finally {
+      isCancelling.value = false;
+    }
   }
 
-  // ================= Public Dialog Methods =================
   void showBookingDialog() {
     Get.dialog(BookingDialog(controller: this));
   }
@@ -130,31 +191,83 @@ class BookingController extends GetxController {
     Get.dialog(EditBookingDialog(controller: this, booking: currentBooking.value!));
   }
 
-  // ================= Helpers =================
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  String formatApiDateToArabic(String? dateString) {
+    if (dateString == null || dateString.isEmpty) return 'غير محدد';
+
+    try {
+      final date = DateTime.parse(dateString);
+      final formatter = DateFormat('yyyy/MM/dd', 'ar');
+      return formatter.format(date);
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  String getBookingStatusText(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'قيد الانتظار';
+      case 'approved':
+        return 'مؤكد';
+      case 'rejected':
+        return 'مرفوض';
+      case 'cancelled':
+        return 'ملغي';
+      default:
+        return status ?? 'غير معروف';
+    }
+  }
+
+  Color getBookingStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'approved':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      case 'cancelled':
+        return Colors.grey;
+      default:
+        return Colors.blue;
+    }
+  }
+
   void _showSuccess(String message) {
     if (Get.isSnackbarOpen) return;
-    Get.snackbar('نجح'.tr, message,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        icon: const Icon(Icons.check_circle, color: Colors.white));
+    Get.snackbar(
+      'نجح'.tr,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+      icon: const Icon(Icons.check_circle, color: Colors.white),
+      duration: const Duration(seconds: 3),
+    );
   }
 
   void _showError(String message) {
     if (Get.isSnackbarOpen) return;
-    Get.snackbar('خطأ'.tr, message,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        icon: const Icon(Icons.error, color: Colors.white));
+    Get.snackbar(
+      'خطأ'.tr,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      icon: const Icon(Icons.error, color: Colors.white),
+      duration: const Duration(seconds: 3),
+    );
   }
 }
 
-// ================= Public Booking Dialogs =================
 
 class BookingDialog extends StatefulWidget {
   final BookingController controller;
-
   const BookingDialog({required this.controller, super.key});
 
   @override
@@ -197,7 +310,7 @@ class _BookingDialogState extends State<BookingDialog> {
               onTap: () async {
                 final date = await showDatePicker(
                   context: context,
-                  initialDate: startDate ?? DateTime.now(),
+                  initialDate: startDate ?? DateTime.now().add(const Duration(days: 1)),
                   firstDate: startDate ?? DateTime.now(),
                   lastDate: DateTime.now().add(const Duration(days: 365)),
                 );
@@ -208,7 +321,7 @@ class _BookingDialogState extends State<BookingDialog> {
             TextField(
               controller: notesController,
               decoration: InputDecoration(
-                labelText: 'ملاحظات (اختياري)'.tr,
+                labelText: 'ملاحظات'.tr,
                 border: const OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -246,6 +359,7 @@ class _BookingDialogState extends State<BookingDialog> {
     super.dispose();
   }
 }
+
 
 class EditBookingDialog extends StatefulWidget {
   final BookingController controller;

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:livora/app_colors.dart';
 
 class Themes {
-  // 🌞 Light Theme (الوضع النهاري)
+
+  // Light Theme
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -10,10 +11,8 @@ class Themes {
       primaryColor: AppColors.accent,
       scaffoldBackgroundColor: AppColors.white,
 
-      // ✅ تعيين الخط العام للتطبيق كله
       fontFamily: 'DancingScript',
 
-      // نظام الألوان
       colorScheme: const ColorScheme.light(
         primary: AppColors.accent,
         secondary: AppColors.brownGray,
@@ -32,14 +31,13 @@ class Themes {
         centerTitle: true,
         iconTheme: IconThemeData(color: AppColors.darkGray),
         titleTextStyle: TextStyle(
-          fontFamily: 'DancingScript', // ✅ إضافة الخط هنا
+          fontFamily: 'DancingScript', 
           color: AppColors.darkGray,
           fontSize: 22,
           fontWeight: FontWeight.w700,
         ),
       ),
 
-      // ✅ النصوص بخط DancingScript ودرجات وزن متناسقة
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           fontFamily: 'DancingScript',
@@ -97,7 +95,7 @@ class Themes {
         ),
       ),
 
-      // الأزرار
+      // Buttons
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.accent,
@@ -108,7 +106,7 @@ class Themes {
             borderRadius: BorderRadius.circular(8),
           ),
           textStyle: const TextStyle(
-            fontFamily: 'DancingScript', // ✅ نفس الخط للأزرار
+            fontFamily: 'DancingScript', 
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -131,7 +129,7 @@ class Themes {
         ),
       ),
 
-      // الكروت
+      // Cards
       cardTheme: CardThemeData(
         color: AppColors.white,
         elevation: 0,
@@ -141,7 +139,7 @@ class Themes {
         ),
       ),
 
-      // حقول الإدخال
+      //  lables
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.white,
@@ -169,7 +167,7 @@ class Themes {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
 
-      // الأيقونات
+      // Icons
       iconTheme: const IconThemeData(
         color: AppColors.darkGray,
         size: 24,
@@ -177,7 +175,7 @@ class Themes {
     );
   }
 
-  // 🌙 Dark Theme (الوضع الليلي)
+  //  Dark Theme 
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
@@ -185,7 +183,7 @@ class Themes {
       primaryColor: AppColors.darkAccent,
       scaffoldBackgroundColor: AppColors.darkBg,
 
-      fontFamily: 'DancingScript', // ✅ نفس الخط في الوضع الليلي
+      fontFamily: 'DancingScript', 
 
       colorScheme: const ColorScheme.dark(
         primary: AppColors.darkAccent,

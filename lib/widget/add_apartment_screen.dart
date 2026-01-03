@@ -21,7 +21,6 @@ class AddApartmentScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title Field
               _buildTextField(
                 controller: controller.titleController,
                 label: 'عنوان الشقة'.tr,
@@ -30,7 +29,6 @@ class AddApartmentScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Governorate Field
               _buildTextField(
                 controller: controller.governorateController,
                 label: 'المحافظة'.tr,
@@ -39,7 +37,6 @@ class AddApartmentScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // City Field
               _buildTextField(
                 controller: controller.cityController,
                 label: 'المدينة'.tr,
@@ -48,7 +45,6 @@ class AddApartmentScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Number of Rooms
               _buildTextField(
                 controller: controller.numberRoomsController,
                 label: 'عدد الغرف'.tr,
@@ -58,7 +54,6 @@ class AddApartmentScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Price Field
               _buildTextField(
                 controller: controller.priceController,
                 label: 'السعر'.tr,
@@ -68,17 +63,15 @@ class AddApartmentScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Description Field
               _buildTextField(
                 controller: controller.descriptionController,
-                label: 'الوصف (اختياري)'.tr,
+                label: 'الوصف'.tr,
                 icon: Icons.description,
                 maxLines: 4,
                 validator: null,
               ),
               const SizedBox(height: 24),
 
-              // Main Image Section
               Text(
                 'الصورة الرئيسية'.tr,
                 style: const TextStyle(
@@ -91,9 +84,8 @@ class AddApartmentScreen extends StatelessWidget {
               Obx(() => _buildMainImagePicker(controller)),
               const SizedBox(height: 24),
 
-              // Additional Images Section
               Text(
-                'صور إضافية (اختياري - حتى 5 صور)'.tr,
+                'صور إضافية'.tr,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -104,7 +96,6 @@ class AddApartmentScreen extends StatelessWidget {
               Obx(() => _buildAdditionalImagesPicker(controller)),
               const SizedBox(height: 32),
 
-              // Submit Button
               Obx(() => SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -142,7 +133,6 @@ class AddApartmentScreen extends StatelessWidget {
     );
   }
 
-  // Build Text Field Widget
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -174,7 +164,6 @@ class AddApartmentScreen extends StatelessWidget {
     );
   }
 
-  // Main Image Picker Widget
   Widget _buildMainImagePicker(AddApartmentController controller) {
     if (controller.mainImage.value != null) {
       return Stack(
@@ -230,11 +219,9 @@ class AddApartmentScreen extends StatelessWidget {
     );
   }
 
-  // Additional Images Picker Widget
   Widget _buildAdditionalImagesPicker(AddApartmentController controller) {
     return Column(
       children: [
-        // Display selected images
         if (controller.additionalImages.isNotEmpty)
           SizedBox(
             height: 100,
@@ -283,7 +270,6 @@ class AddApartmentScreen extends StatelessWidget {
         
         const SizedBox(height: 12),
         
-        // Add button
         if (controller.additionalImages.length < 5)
           OutlinedButton.icon(
             onPressed: controller.pickAdditionalImages,
@@ -291,7 +277,7 @@ class AddApartmentScreen extends StatelessWidget {
             label: Text(
               controller.additionalImages.isEmpty
                   ? 'إضافة صور'.tr
-                  : 'إضافة المزيد (${controller.additionalImages.length}/5)'.tr,
+                  :'${'إضافة المزيد'.tr} (${controller.additionalImages.length}/5)',
             ),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 48),

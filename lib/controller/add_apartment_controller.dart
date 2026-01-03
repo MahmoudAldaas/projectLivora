@@ -6,7 +6,7 @@ import 'package:livora/core/api/api_service.dart';
 import 'package:livora/controller/home_controller.dart';
 
 class AddApartmentController extends GetxController {
-  // Text Controllers
+
   final titleController = TextEditingController();
   final governorateController = TextEditingController();
   final cityController = TextEditingController();
@@ -14,23 +14,20 @@ class AddApartmentController extends GetxController {
   final priceController = TextEditingController();
   final descriptionController = TextEditingController();
 
-  // Form Key
+ 
   final formKey = GlobalKey<FormState>();
 
-  // Images (اختيارية)
+  
   final Rx<File?> mainImage = Rx<File?>(null);
   final RxList<File> additionalImages = <File>[].obs;
 
-  // Loading State
   final isLoading = false.obs;
-
-  // Image Picker
   final ImagePicker _picker = ImagePicker();
 
-  // Home Controller
+ 
   final HomeController homeController = Get.find<HomeController>();
 
-  /// Pick main image from gallery
+  // Pick main image 
   Future<void> pickMainImage() async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
@@ -46,7 +43,7 @@ class AddApartmentController extends GetxController {
     }
   }
 
-  /// Pick additional images from gallery
+  // Pick additional images 
   Future<void> pickAdditionalImages() async {
     try {
       final List<XFile>? pickedFiles = await _picker.pickMultiImage(
@@ -72,26 +69,24 @@ class AddApartmentController extends GetxController {
     }
   }
 
-  /// Remove additional image
+  // Remove additional image
   void removeAdditionalImage(int index) {
     if (index >= 0 && index < additionalImages.length) {
       additionalImages.removeAt(index);
     }
   }
 
-  /// Remove main image
+  // Remove main image
   void removeMainImage() {
     mainImage.value = null;
   }
 
-  /// Validate and submit apartment (الصور اختيارية)
+  // Validate and submit apartment 
   Future<void> submitApartment() async {
-    // Validate form
+   
     if (!formKey.currentState!.validate()) {
       return;
     }
-
-    // Validate number inputs
     final numberRooms = int.tryParse(numberRoomsController.text);
     final price = double.tryParse(priceController.text);
 
@@ -115,10 +110,10 @@ class AddApartmentController extends GetxController {
         numberRooms: numberRooms,
         price: price,
         description: descriptionController.text.trim(),
-        mainImagePath: mainImage.value?.path ?? '', // ✅ اختيارية
+        mainImagePath: mainImage.value?.path ?? '', 
         imagesPath: additionalImages.isNotEmpty 
             ? additionalImages.map((e) => e.path).toList() 
-            : null, // ✅ اختيارية
+            : null, 
       );
 
       if (!result['error']) {
@@ -127,7 +122,7 @@ class AddApartmentController extends GetxController {
         // Refresh home apartments list
         await homeController.loadApartments();
         
-        // Close screen
+        
         Get.back();
       } else {
         _showErrorSnackbar(result['message'] ?? 'فشل في إضافة الشقة'.tr);
@@ -139,7 +134,7 @@ class AddApartmentController extends GetxController {
     }
   }
 
-  /// Show success snackbar
+  
   void _showSuccessSnackbar(String message) {
     if (Get.isSnackbarOpen) return;
     
@@ -156,7 +151,6 @@ class AddApartmentController extends GetxController {
     );
   }
 
-  /// Show error snackbar
   void _showErrorSnackbar(String message) {
     if (Get.isSnackbarOpen) return;
     
@@ -175,7 +169,6 @@ class AddApartmentController extends GetxController {
 
   @override
   void onClose() {
-    // Dispose controllers
     titleController.dispose();
     governorateController.dispose();
     cityController.dispose();

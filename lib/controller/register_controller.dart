@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:livora/core/api/api_service.dart';
 
 class RegisterController extends GetxController {
-  // Text Controllers
+
   final TextEditingController firstName = TextEditingController();
   final TextEditingController lastName = TextEditingController();
   final TextEditingController phone = TextEditingController();
@@ -12,20 +12,17 @@ class RegisterController extends GetxController {
   final TextEditingController confirmPassword = TextEditingController();
   final TextEditingController birthdate = TextEditingController();
 
-  // Observable Variables
   RxString role = ''.obs;
   RxInt currentStep = 0.obs;
   RxBool isLoading = false.obs;
   RxBool isPasswordVisible = false.obs;
   RxBool isConfirmPasswordVisible = false.obs;
   
-  // Images
   RxString profileImagePath = ''.obs;
   RxString idImagePath = ''.obs;
 
   final ImagePicker _picker = ImagePicker();
 
-  // Toggle Password Visibility
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
   }
@@ -34,7 +31,6 @@ class RegisterController extends GetxController {
     isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
   }
 
-  // Pick Birthdate
   Future<void> pickBirthdate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -48,7 +44,6 @@ class RegisterController extends GetxController {
     }
   }
 
-  // Pick Profile Image
   Future<void> pickProfileImage() async {
     try {
       final XFile? image = await _picker.pickImage(
@@ -68,7 +63,6 @@ class RegisterController extends GetxController {
     }
   }
 
-  // Pick ID Image
   Future<void> pickIdImage() async {
     try {
       final XFile? image = await _picker.pickImage(
@@ -88,9 +82,7 @@ class RegisterController extends GetxController {
     }
   }
 
-  // Register Function
   Future<void> register() async {
-    // Validate Step 2
     if (birthdate.text.isEmpty) {
       Get.snackbar('Error'.tr, 'Please select birthdate'.tr);
       return;
@@ -112,17 +104,13 @@ class RegisterController extends GetxController {
 
       isLoading.value = false;
 
-      // ✅ طباعة النتيجة للتأكد
-      print('📌 Register Result: $result');
+      print('Register Result: $result');
 
-      // ✅ التحقق من النجاح حسب status_code
       final statusCode = result['status_code'];
       
       if (statusCode != null && statusCode >= 200 && statusCode < 300) {
-        // ✅ نجح التسجيل - ارجع للـ Login
         Get.back();
         
-        // ✅ إظهار رسالة النجاح بعد الرجوع
         Future.delayed(Duration(milliseconds: 300), () {
           Get.snackbar(
             'Success'.tr,
@@ -135,7 +123,6 @@ class RegisterController extends GetxController {
         });
         
       } else {
-        // ✅ فشل التسجيل
         Get.snackbar(
           'Error'.tr,
           result['message'] ?? 'Registration failed'.tr,
@@ -147,7 +134,7 @@ class RegisterController extends GetxController {
       }
     } catch (e) {
       isLoading.value = false;
-      print('❌ Register Error: $e');
+      print('Register Error: $e');
       
       Get.snackbar(
         'Error'.tr,
@@ -162,7 +149,6 @@ class RegisterController extends GetxController {
 
   @override
   void onClose() {
-    // Clean up controllers
     firstName.dispose();
     lastName.dispose();
     phone.dispose();

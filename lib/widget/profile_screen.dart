@@ -9,7 +9,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context); // ✅ استخدام الثيم
+    final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
 
@@ -17,35 +17,49 @@ class ProfileScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'profile'.tr,
-          style: textTheme.headlineMedium, // ✅ من TextTheme
+          style: textTheme.headlineMedium,
         ),
         centerTitle: true,
-        // ❌ حذف backgroundColor
       ),
 
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // ---------------- MY BOOKINGS ----------------
-            Card(
-              child: ListTile(
-                leading: Icon(
-                  Icons.book_online,
-                  color: colors.primary, // ✅ من ColorScheme
+            Obx(() {
+              if (controller.userRole.value == 'owner') {
+                return const SizedBox();
+              }
+
+              return Card(
+                child: ListTile(
+                  leading: Icon(Icons.book_online, color: colors.primary),
+                  title: Text('حجوزاتي'.tr, style: textTheme.titleLarge),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: controller.goToMyBookings,
                 ),
-                title: Text(
-                  'حجوزاتي'.tr,
-                  style: textTheme.titleLarge, // ✅
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: controller.goToMyBookings,
-              ),
-            ),
+              );
+            }),
 
             const SizedBox(height: 12),
 
-            // ---------------- DARK MODE ----------------
+            Obx(() {
+              if (controller.userRole.value != 'owner') {
+                return const SizedBox();
+              }
+
+              return Card(
+                child: ListTile(
+                  leading: Icon(Icons.assignment, color: colors.primary),
+                  title: Text('طلبات الحجز'.tr, style: textTheme.titleLarge),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: controller.goToOwnerBookings,
+                ),
+              );
+            }),
+
+            const SizedBox(height: 12),
+
             Card(
               child: Obx(
                 () => SwitchListTile(
@@ -53,12 +67,9 @@ class ProfileScreen extends StatelessWidget {
                     controller.isDarkMode.value
                         ? Icons.dark_mode
                         : Icons.light_mode,
-                    color: colors.primary, // ✅
+                    color: colors.primary,
                   ),
-                  title: Text(
-                    'الوضع الليلي'.tr,
-                    style: textTheme.titleLarge,
-                  ),
+                  title: Text('الوضع الليلي'.tr, style: textTheme.titleLarge),
                   value: controller.isDarkMode.value,
                   activeColor: colors.primary,
                   onChanged: controller.toggleDarkMode,
@@ -68,17 +79,10 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // ---------------- LANGUAGE ----------------
             Card(
               child: ListTile(
-                leading: Icon(
-                  Icons.language,
-                  color: colors.primary,
-                ),
-                title: Text(
-                  'اللغة'.tr,
-                  style: textTheme.titleLarge,
-                ),
+                leading: Icon(Icons.language, color: colors.primary),
+                title: Text('اللغة'.tr, style: textTheme.titleLarge),
                 trailing: SizedBox(
                   width: 110,
                   child: DropdownButton<String>(
@@ -89,13 +93,9 @@ class ProfileScreen extends StatelessWidget {
                     underline: const SizedBox(),
                     items: const [
                       DropdownMenuItem(
-                        value: 'العربية',
-                        child: Text('العربية'),
-                      ),
+                          value: 'العربية', child: Text('العربية')),
                       DropdownMenuItem(
-                        value: 'English',
-                        child: Text('English'),
-                      ),
+                          value: 'English', child: Text('English')),
                     ],
                     onChanged: (value) {
                       if (value != null) {
@@ -109,23 +109,15 @@ class ProfileScreen extends StatelessWidget {
 
             const Spacer(),
 
-            // ---------------- LOGOUT ----------------
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: colors.error, // ✅
-                  width: 2,
-                ),
+                border: Border.all(color: colors.error, width: 2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: TextButton.icon(
                 onPressed: controller.showLogoutDialog,
-                icon: Icon(
-                  Icons.logout,
-                  color: colors.error,
-                  size: 20,
-                ),
+                icon: Icon(Icons.logout, color: colors.error, size: 20),
                 label: Text(
                   'تسجيل الخروج'.tr,
                   style: textTheme.titleLarge?.copyWith(

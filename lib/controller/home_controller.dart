@@ -5,12 +5,11 @@ import 'package:livora/core/api/api_service.dart';
 import 'package:livora/models/apartment.dart';
 
 class HomeController extends GetxController {
-  // User Data
   final userName = ''.obs;
   final role = ''.obs;
   final isowner = false.obs;
+  final userId = 0.obs;
   
-  // Apartment Info
   final apartments = <Apartment>[].obs;
   final isLoading = false.obs;
   final errorMessage = ''.obs;
@@ -18,34 +17,37 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadUserData();  // 👈 جيب بيانات المستخدم
-    loadApartments();
+    _initialize();
   }
 
-  /// 🔥 Load user data from SharedPreferences (نفس طريقة LoginController)
+  Future<void> _initialize() async {
+    await ApiService.loadAuthToken();
+    await _loadUserData();
+    await loadApartments();
+  }
+
   Future<void> _loadUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       
-      // قراءة البيانات بنفس المفاتيح اللي حفظها LoginController
       role.value = prefs.getString('user_role') ?? 'renter';
       userName.value = prefs.getString('user_name') ?? '';
+      userId.value = prefs.getInt('user_id') ?? 0;
       
-      // 🔥 تحديد إذا كان owner
       isowner.value = role.value == 'owner';
 
-      print('✅ تم تحميل بيانات المستخدم:');
+      print(' تم تحميل بيانات المستخدم:');
+      print('   User ID: ${userId.value}');
       print('   Role: ${role.value}');
       print('   Is Owner: ${isowner.value}');
       print('   Name: ${userName.value}');
       
     } catch (e) {
-      print('❌ خطأ في تحميل بيانات المستخدم: $e');
+      print(' خطأ في تحميل بيانات المستخدم: $e');
       isowner.value = false;
     }
   }
 
-  /// Fetch apartments from API
   Future<void> loadApartments() async {
     try {
       isLoading.value = true;
@@ -54,50 +56,115 @@ class HomeController extends GetxController {
       final result = await ApiService.getApartments();
       apartments.value = result;
       
+      print('تم تحميل ${result.length} شقة');
+      
     } catch (e) {
       errorMessage.value = e.toString();
+      print(' خطأ في تحميل الشقق: $e');
       _showErrorSnackbar('فشل في تحميل الشقق'.tr);
     } finally {
       isLoading.value = false;
     }
   }
 
-  /// Refresh apartments list
   Future<void> refreshApartments() async {
     await loadApartments();
   }
 
-  /// Delete apartment with optimistic UI update
   Future<void> deleteApartment(int apartmentId, int index) async {
     if (apartmentId <= 0 || index < 0 || index >= apartments.length) {
       _showErrorSnackbar('بيانات غير صالحة'.tr);
       return;
     }
 
-    // Store apartment for potential rollback
+    final confirm = await Get.dialog<bool>(
+      AlertDialog(
+        title: Text('تأكيد الحذف'.tr),
+        content: Text('هل أنت متأكد من حذف هذه الشقة؟'.tr),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('إلغاء'.tr),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text('حذف'.tr),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     final deletedApartment = apartments[index];
     
-    // Optimistic UI update - remove immediately
     apartments.removeAt(index);
 
     try {
+      print('محاولة حذف الشقة #$apartmentId');
+      
       final result = await ApiService.deleteApartment(apartmentId);
 
       if (result['error'] == false) {
+        print(' تم حذف الشقة بنجاح');
         _showSuccessSnackbar('تم حذف الشقة بنجاح'.tr);
       } else {
-        // Rollback on failure
+        print(' فشل الحذف: ${result['message']}');
+        
         apartments.insert(index, deletedApartment);
-        _showErrorSnackbar(result['message'] ?? 'فشل في حذف الشقة'.tr);
+        
+        if (result['status_code'] == 403 || result['status_code'] == 401) {
+          _showErrorSnackbar('لا يمكنك حذف هذه الشقة - أنت لست المالك'.tr);
+        } else {
+          _showErrorSnackbar(result['message'] ?? 'فشل في حذف الشقة'.tr);
+        }
       }
     } catch (e) {
-      // Rollback on error
+      print(' خطأ أثناء الحذف: $e');
+      
       apartments.insert(index, deletedApartment);
+      
       _showErrorSnackbar('حدث خطأ أثناء الحذف'.tr);
     }
   }
 
-  /// Show success snackbar
+  Future<void> updateApartment({
+    required int apartmentId,
+    required String title,
+    String? description,
+    required double price,
+  }) async {
+    try {
+      print(' محاولة تعديل الشقة #$apartmentId');
+      
+      final result = await ApiService.updateApartment(
+        id: apartmentId,
+        title: title,
+        description: description,
+        price: price,
+      );
+
+      if (result['error'] == false) {
+        print('تم تعديل الشقة بنجاح');
+        _showSuccessSnackbar('تم تعديل الشقة بنجاح'.tr);
+        
+        await loadApartments();
+      } else {
+        print(' فشل التعديل: ${result['message']}');
+        
+        if (result['status_code'] == 403 || result['status_code'] == 401) {
+          _showErrorSnackbar('لا يمكنك تعديل هذه الشقة - أنت لست المالك'.tr);
+        } else {
+          _showErrorSnackbar(result['message'] ?? 'فشل في تعديل الشقة'.tr);
+        }
+      }
+    } catch (e) {
+      print('خطأ أثناء التعديل: $e');
+      _showErrorSnackbar('حدث خطأ أثناء التعديل'.tr);
+    }
+  }
+
   void _showSuccessSnackbar(String message) {
     if (Get.isSnackbarOpen) return;
     
@@ -114,7 +181,6 @@ class HomeController extends GetxController {
     );
   }
 
-  /// Show error snackbar
   void _showErrorSnackbar(String message) {
     if (Get.isSnackbarOpen) return;
     

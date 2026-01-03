@@ -25,7 +25,6 @@ class RegisterScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
 
-              // ROLE Selection
               Text(
                 "I am a:".tr,
                 style: theme.textTheme.titleLarge,
@@ -40,12 +39,10 @@ class RegisterScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // ✅ Step 1: Names + Phone + Passwords
               if (controller.currentStep.value == 0) ...[
                 _field(context, "First Name".tr, controller.firstName),
                 _field(context, "Last Name".tr, controller.lastName),
                 
-                // Phone Number
                 _field(
                   context,
                   "Phone Number".tr,
@@ -54,7 +51,6 @@ class RegisterScreen extends StatelessWidget {
                   prefixIcon: Icons.phone,
                 ),
                 
-                // Password with visibility toggle
                 _field(
                   context,
                   "Password".tr,
@@ -64,7 +60,6 @@ class RegisterScreen extends StatelessWidget {
                   toggleVisibility: controller.togglePasswordVisibility,
                 ),
                 
-                // Confirm Password
                 _field(
                   context,
                   "Confirm Password".tr,
@@ -94,7 +89,6 @@ class RegisterScreen extends StatelessWidget {
                   ),
                 ),
               ] 
-              // ✅ Step 2: Birthdate + Images (Optional)
               else ...[
                 // Birthdate
                 TextFormField(
@@ -111,7 +105,6 @@ class RegisterScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 25),
 
-                // ✅ Profile Image (Optional)
                 Text(
                   "Profile Image".tr,
                   style: theme.textTheme.titleMedium?.copyWith(
@@ -128,7 +121,6 @@ class RegisterScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // ✅ ID Image (Optional)
                 Text(
                   "ID Image".tr,
                   style: theme.textTheme.titleMedium?.copyWith(
@@ -145,7 +137,6 @@ class RegisterScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
 
-                // Back + Register Buttons
                 Row(
                   children: [
                     Expanded(
@@ -189,7 +180,6 @@ class RegisterScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // Login Link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -217,7 +207,6 @@ class RegisterScreen extends StatelessWidget {
     );
   }
 
-  // ✅ Role Button
   Widget _roleButton(BuildContext context, String label, String value) {
     final theme = Theme.of(context);
     final isSelected = controller.role.value == value;
@@ -252,7 +241,6 @@ class RegisterScreen extends StatelessWidget {
     );
   }
 
-  // ✅ Text Field
   Widget _field(
     BuildContext context,
     String label,
@@ -288,7 +276,6 @@ class RegisterScreen extends StatelessWidget {
     );
   }
 
-  // ✅ Image Picker
   Widget _buildImagePicker(
     BuildContext context, {
     required String label,
@@ -382,7 +369,6 @@ class RegisterScreen extends StatelessWidget {
     );
   }
 
-  // ✅ Validation for Step 1
   bool _validateStep1() {
     if (controller.firstName.text.isEmpty) {
       Get.snackbar("Error".tr, "Please enter first name".tr);

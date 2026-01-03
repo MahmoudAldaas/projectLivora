@@ -17,7 +17,6 @@ class LogInController extends GetxController {
     _checkSavedLogin();
   }
 
-  /// تحقق من وجود تسجيل دخول سابق
   Future<void> _checkSavedLogin() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -25,7 +24,7 @@ class LogInController extends GetxController {
       final userJson = prefs.getString('user');
 
       if (token != null && userJson != null) {
-        ApiService.setAuthToken(token);
+        await ApiService.setAuthToken(token); 
         Get.offAll(() => const MainScreen());
       }
     } catch (e) {
@@ -33,9 +32,7 @@ class LogInController extends GetxController {
     }
   }
 
-  /// تسجيل الدخول
   Future<void> login() async {
-    // التحقق من الحقول
     if (phone.text.isEmpty || password.text.isEmpty) {
       Get.snackbar(
         "Error",
@@ -46,7 +43,6 @@ class LogInController extends GetxController {
       return;
     }
 
-    // التحقق من رقم الهاتف السوري
     if (!phone.text.startsWith('09') || phone.text.length != 10) {
       Get.snackbar(
         "Error",
@@ -76,7 +72,6 @@ class LogInController extends GetxController {
         return;
       }
 
-      // استخراج البيانات
       final user = result['user'];
       final token = result['token'];
 
@@ -90,13 +85,11 @@ class LogInController extends GetxController {
         return;
       }
 
-      // حفظ البيانات في SharedPreferences
       await _saveUserData(token, user);
 
-      // تحديث التوكن في ApiService
-      ApiService.setAuthToken(token);
+      
+      await ApiService.setAuthToken(token);
 
-      // رسالة نجاح
       Get.snackbar(
         "Success",
         result['message'] ?? 'Logged in successfully',
@@ -105,7 +98,6 @@ class LogInController extends GetxController {
         duration: const Duration(seconds: 2),
       );
 
-      // التوجيه إلى MainScreen
       await Future.delayed(const Duration(milliseconds: 500));
       Get.offAll(() => const MainScreen());
     } catch (e) {
@@ -121,7 +113,6 @@ class LogInController extends GetxController {
     }
   }
 
-  /// حفظ بيانات المستخدم في SharedPreferences
   Future<void> _saveUserData(String token, Map<String, dynamic> user) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -134,13 +125,12 @@ class LogInController extends GetxController {
       await prefs.setString('user_phone', user['phone'] ?? '');
       await prefs.setString('user_role', user['role'] ?? 'renter');
 
-      print('User data saved to SharedPreferences');
+      print(' User data saved to SharedPreferences');
     } catch (e) {
       print('Error saving user data: $e');
     }
   }
 
-  /// استرجاع بيانات المستخدم المحفوظة
   static Future<Map<String, dynamic>?> getSavedUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();

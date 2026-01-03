@@ -16,14 +16,10 @@ class LogInScreen extends StatelessWidget {
     final textTheme = theme.textTheme;
 
     return Scaffold(
-      // 🔴 لا backgroundColor
-      // ✅ الثيم يحدد الخلفية
-
       appBar: AppBar(
-        // 🔴 لا TextStyle يدوي
         title: Text(
           'Log In'.tr,
-          style: textTheme.titleLarge, // ✅ من TextTheme
+          style: textTheme.titleLarge, 
         ),
         centerTitle: true,
       ),
@@ -35,10 +31,9 @@ class LogInScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 40),
 
-            // 🔴 Colors ثابتة
             Text(
               'Welcome Back'.tr,
-              style: textTheme.displaySmall, // ✅
+              style: textTheme.displaySmall, 
               textAlign: TextAlign.center,
             ),
 
@@ -46,13 +41,12 @@ class LogInScreen extends StatelessWidget {
 
             Text(
               'Sign in to continue'.tr,
-              style: textTheme.bodyMedium, // ✅
+              style: textTheme.bodyMedium, 
               textAlign: TextAlign.center,
             ),
 
             const SizedBox(height: 50),
 
-            // ---------------- PHONE ----------------
             TextFormField(
               controller: controller.phone,
               keyboardType: TextInputType.phone,
@@ -66,7 +60,6 @@ class LogInScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // ---------------- PASSWORD ----------------
             Obx(
               () => TextFormField(
                 controller: controller.password,
@@ -83,10 +76,8 @@ class LogInScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            // ---------------- BUTTON ----------------
             Obx(
               () => ElevatedButton(
-                // 🔴 لا styleFrom
                 onPressed:
                     controller.isLoading.value ? null : controller.login,
                 child: controller.isLoading.value
@@ -94,7 +85,7 @@ class LogInScreen extends StatelessWidget {
                     : Text(
                         'Log In'.tr,
                         style: textTheme.titleMedium?.copyWith(
-                          color: colors.onPrimary, // ✅
+                          color: colors.onPrimary, 
                         ),
                       ),
               ),
@@ -102,7 +93,6 @@ class LogInScreen extends StatelessWidget {
 
             const SizedBox(height: 50),
 
-            // ---------------- REGISTER ----------------
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -128,7 +118,6 @@ class LogInScreen extends StatelessWidget {
     );
   }
 
-  // ---------------- INPUT DECORATION ----------------
   InputDecoration _inputDecoration(
     BuildContext context, {
     required String label,
@@ -143,11 +132,10 @@ class LogInScreen extends StatelessWidget {
       labelText: label,
       hintText: hint,
 
-      // 🔴 Colors.white
       filled: true,
-      fillColor: colors.surface, // ✅
+      fillColor: colors.surface, 
 
-      prefixIcon: Icon(icon, color: colors.primary), // ✅
+      prefixIcon: Icon(icon, color: colors.primary), 
 
       suffixIcon: isPassword && obscurePassword != null
           ? Obx(

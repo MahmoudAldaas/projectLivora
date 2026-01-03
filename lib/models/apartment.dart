@@ -26,7 +26,6 @@ class Apartment {
   });
 
   factory Apartment.fromJson(Map<String, dynamic> json) {
-    // Porcees Photo
     List<String>? imagesList;
     if (json['images'] != null) {
       if (json['images'] is List) {

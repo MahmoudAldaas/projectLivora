@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:livora/models/apartment.dart';
 import 'package:livora/controller/apartment_details_controller.dart';
-import 'package:livora/controller/booking_controller.dart';
+import '../controller/booking_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../widget/edit_apartment_scren.dart';
 
 class ApartmentDetailsScreen extends StatelessWidget {
   final Apartment apartment;
@@ -28,26 +30,36 @@ class ApartmentDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         elevation: 0,
         iconTheme: theme.iconTheme,
-        title: Text(
-          'Apartment Details'.tr,
-          style: theme.textTheme.titleLarge,
-        ),
+        title: Text('Apartment Details'.tr, style: theme.textTheme.titleLarge),
+        actions: [
+          Obx(() {
+            if (controller.canEditApartment) {
+              return IconButton(
+                icon: const Icon(Icons.edit),
+                tooltip: 'تعديل الشقة'.tr,
+                onPressed: () => _navigateToEditScreen(controller),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+        ],
       ),
       body: Obx(() {
-        /// تحميل
         if (controller.isLoading.value && controller.apartment.value == null) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        /// خطأ
         if (controller.errorMessage.value.isNotEmpty &&
             controller.apartment.value == null) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline,
-                    size: 60, color: theme.colorScheme.error),
+                Icon(
+                  Icons.error_outline,
+                  size: 60,
+                  color: theme.colorScheme.error,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   controller.errorMessage.value,
@@ -81,20 +93,22 @@ class ApartmentDetailsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      /// العنوان
                       Text(
                         apt.title,
-                        style: theme.textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
 
                       const SizedBox(height: 12),
 
-                      /// السعر
                       Row(
                         children: [
-                          Icon(Icons.attach_money,
-                              color: theme.colorScheme.primary, size: 28),
+                          Icon(
+                            Icons.attach_money,
+                            color: theme.colorScheme.primary,
+                            size: 28,
+                          ),
                           Text(
                             apt.price,
                             style: theme.textTheme.headlineMedium?.copyWith(
@@ -107,47 +121,93 @@ class ApartmentDetailsScreen extends StatelessWidget {
 
                       const Divider(height: 32),
 
-                      /// معلومات
                       _buildInfoSection(apt, theme),
 
                       const Divider(height: 32),
 
-                      /// الوصف
                       if (apt.description != null &&
                           apt.description!.isNotEmpty) ...[
                         Text(
                           'الوصف'.tr,
-                          style: theme.textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           apt.description!,
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(height: 1.5),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.5,
+                          ),
                         ),
                         const SizedBox(height: 24),
                       ],
 
-                      /// صور إضافية
                       if (apt.images != null && apt.images!.isNotEmpty) ...[
                         Text(
                           'صور اضافية'.tr,
-                          style: theme.textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         _buildImageGallery(apt.images!),
                         const SizedBox(height: 24),
                       ],
 
-                      /// معلومات المالك
                       _buildOwnerInfo(apt, theme),
 
                       const SizedBox(height: 24),
 
-                      /// 🔥 Booking Section
-                      Obx(() => _buildBookingSection(bookingController, theme)),
+                      Obx(() {
+                        if (controller.canEditApartment) {
+                          return Column(
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                height: 50,
+                                child: OutlinedButton.icon(
+                                  onPressed: () =>
+                                      _navigateToEditScreen(controller),
+                                  icon: const Icon(Icons.edit),
+                                  label: Text(
+                                    'تعديل معلومات الشقة'.tr,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    side: BorderSide(
+                                      color: theme.colorScheme.primary,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      }),
+
+                      FutureBuilder<String>(
+                        future: _getUserRole(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData && snapshot.data == 'owner') {
+                            return const SizedBox.shrink();
+                          }
+
+                          return Obx(
+                            () =>
+                                _buildBookingSection(bookingController, theme),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -159,11 +219,29 @@ class ApartmentDetailsScreen extends StatelessWidget {
     );
   }
 
-  // ===================== Booking Section =====================
-  
+  Future<String> _getUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_role') ?? '';
+  }
+
+  Future<void> _navigateToEditScreen(
+    ApartmentDetailsController controller,
+  ) async {
+    final result = await Get.to(
+      () => EditApartmentScreen(
+        apartment: controller.apartment.value ?? apartment,
+      ),
+    );
+
+    if (result == true) {
+      await controller.refreshApartmentDetails();
+    }
+  }
+
+
   Widget _buildBookingSection(BookingController controller, ThemeData theme) {
-    if (controller.hasBooking.value && controller.currentBooking.value != null) {
-      // User has existing booking
+    if (controller.hasBooking.value &&
+        controller.currentBooking.value != null) {
       final booking = controller.currentBooking.value!;
       return Column(
         children: [
@@ -191,8 +269,12 @@ class ApartmentDetailsScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text('من: ${booking['start_date']}'),
-                Text('إلى: ${booking['end_date']}'),
+                Text(
+                  'من: ${controller.formatApiDateToArabic(booking['start_date'])}',
+                ),
+                Text(
+                  'إلى: ${controller.formatApiDateToArabic(booking['end_date'])}',
+                ),
                 if (booking['notes'] != null && booking['notes'].isNotEmpty)
                   Text('ملاحظات: ${booking['notes']}'),
               ],
@@ -210,29 +292,30 @@ class ApartmentDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Obx(() => ElevatedButton.icon(
-                  onPressed: controller.isCancelling.value
-                      ? null
-                      : () => controller.cancelBooking(booking['id']),
-                  icon: controller.isCancelling.value
-                      ? const SizedBox(
-                          height: 16,
-                          width: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.close),
-                  label: Text('إلغاء الحجز'.tr),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                child: Obx(
+                  () => ElevatedButton.icon(
+                    onPressed: controller.isCancelling.value
+                        ? null
+                        : () => controller.cancelBooking(booking['id']),
+                    icon: controller.isCancelling.value
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.close),
+                    label: Text('إلغاء الحجز'.tr),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
                   ),
-                )),
+                ),
               ),
             ],
           ),
         ],
       );
     } else {
-      // No booking - show book button
       return SizedBox(
         width: double.infinity,
         height: 50,
@@ -251,7 +334,6 @@ class ApartmentDetailsScreen extends StatelessWidget {
     }
   }
 
-  // ===================== Other Widgets =====================
 
   Widget _buildMainImage(Apartment apt) {
     return Container(
@@ -262,11 +344,8 @@ class ApartmentDetailsScreen extends StatelessWidget {
           ? Image.network(
               apt.mainImage!,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Icon(
-                Icons.apartment,
-                size: 80,
-                color: Colors.grey,
-              ),
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.apartment, size: 80, color: Colors.grey),
             )
           : const Icon(Icons.apartment, size: 80, color: Colors.grey),
     );
@@ -294,7 +373,11 @@ class ApartmentDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildInfoRow(
-      IconData icon, String label, String value, ThemeData theme) {
+    IconData icon,
+    String label,
+    String value,
+    ThemeData theme,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -315,8 +398,9 @@ class ApartmentDetailsScreen extends StatelessWidget {
                 Text(label, style: theme.textTheme.bodySmall),
                 Text(
                   value,
-                  style: theme.textTheme.bodyLarge
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -374,8 +458,9 @@ class ApartmentDetailsScreen extends StatelessWidget {
                 Text('المالك'.tr, style: theme.textTheme.bodySmall),
                 Text(
                   apt.ownerName!,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),

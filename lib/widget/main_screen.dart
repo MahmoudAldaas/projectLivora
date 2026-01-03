@@ -38,7 +38,7 @@ class MainScreen extends StatelessWidget {
     return Obx(
       () => Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        appBar: (navController.currentIndex.value == 3) // إخفاء AppBar لصفحة Notification
+        appBar: (navController.currentIndex.value == 3) 
             ? null
             : AppBar(
                 backgroundColor: theme.appBarTheme.backgroundColor,
@@ -65,7 +65,6 @@ class MainScreen extends StatelessWidget {
               homeController.isowner.value) {
             return FloatingActionButton(
               onPressed: () {
-                // 👈 بدلاً من BottomSheet، نفتح صفحة AddApartmentScreen
                 Get.to(() => AddApartmentScreen());
               },
               backgroundColor: theme.colorScheme.primary,
